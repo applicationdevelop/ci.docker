@@ -38,15 +38,35 @@ LABEL "ProductID"="fbf6a96d49214c0abc6a3bc5da6e48cd" \
 # Set Path Shortcuts
 ENV LOG_DIR=/logs \
     WLP_OUTPUT_DIR=/opt/ibm/wlp/output
-RUN mkdir /logs \
-    && ln -s $WLP_OUTPUT_DIR/defaultServer /output \
-    && ln -s /opt/ibm/wlp/usr/servers/defaultServer /config \
-    && ln -s /opt/ibm /liberty
 
 # Configure WebSphere Liberty
 RUN /opt/ibm/wlp/bin/server create \
     && rm -rf $WLP_OUTPUT_DIR/.classCache /output/workarea
+
 COPY docker-server /opt/ibm/docker/
+
+RUN mkdir /logs \
+    && mkdir /etc/wlp \
+    && mkdir /lib.index.cache \
+    && ln -s $WLP_OUTPUT_DIR/defaultServer /output \
+    && ln -s /opt/ibm/wlp/usr/servers/defaultServer /config \
+    && ln -s /opt/ibm /liberty \
+    && useradd -u 1001 -r -g 0 -s /sbin/nologin default \
+    && chown -R 1001:0 /config \
+    && chmod -R g+rw /config \
+    && chown -R 1001:0 /opt/ibm/docker/docker-server \
+    && chmod -R g+rwx /opt/ibm/docker/docker-server \
+    && chown -R 1001:0 /opt/ibm/wlp \
+    && chmod -R g+rw /opt/ibm/wlp \
+    && chown -R 1001:0 /logs \
+    && chmod -R g+rw /logs \
+    && chown -R 1001:0 /etc/wlp \
+    && chmod -R g+rw /etc/wlp \
+    && chown -R 1001:0 /lib.index.cache \
+    && chmod -R g+rw /lib.index.cache
+
+USER 1001
+
 EXPOSE 9080 9443
 
 ENV KEYSTORE_REQUIRED true
